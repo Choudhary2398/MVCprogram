@@ -5,6 +5,12 @@
 }
 
 <h2>Index</h2>
+<p>@ViewBag.Message</p>
+
+
+    <div class="alert alert-success">
+        <strong> @TempData["Message"]</strong> 
+    </div>
 
 <p>
     @Html.ActionLink("Create New", "Create")
@@ -16,25 +22,75 @@
         </th>
         <th>
             @Html.DisplayNameFor(model => model.empname)
+
         </th>
-        <th></th>
-    </tr>
+        <th>
+            @Html.DisplayNameFor(model => model.salary)
 
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.DisplayFor(modelItem => item.empid)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.empname)
-        </td>
-        <td>
-            @Html.ActionLink("Edit", "Edit", new { id = item.empid }) |
-            @Html.ActionLink("Details", "Details", new { id = item.empid }) |
-            @Html.ActionLink("Delete", "Delete", new { id = item.empid }, new { onclick = "return confirm('Are you sure you want to delete this record?');" })
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.emp_job)
 
-        </td>
+
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.depid) 
+
+
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.emp_date)
+
+
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.email)
+
+
+        </th>
     </tr>
-}
+    @foreach (var item in  Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.empid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.empname)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.salary)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.emp_job)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.depid)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.emp_date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.email)
+            </td>
+
+            <td>
+                @if (!string.IsNullOrEmpty(item.Images))
+                {
+                    <img src="@Url.Content(item.Images)" width="80" />
+                }
+                else
+                {
+                    <span>No Image</span>
+                }
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.empid }) |
+                @Html.ActionLink("Details", "Details", new { id = item.empid }) |
+                @Html.ActionLink("Delete", "Delete", new { id = item.empid }, new { onclick = "return confirm('Are you sure you want to delete this record?');" })
+
+            </td>
+        </tr>
+    }
 
 </table>
