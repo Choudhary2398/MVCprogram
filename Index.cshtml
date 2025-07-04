@@ -1,96 +1,83 @@
-﻿@model IEnumerable<second_Mvc_Web_Apps.Models.ListofEmployees>
-
+﻿
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Registration";
 }
+<h2 class="text-center my-4">Registration</h2>
 
-<h2>Index</h2>
-<p>@ViewBag.Message</p>
+<div class="container">
+
+    <button id="createBtn" class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#regModal">
+        <i class="bi bi-plus-lg"></i> Create New
+    </button>
 
 
-    <div class="alert alert-success">
-        <strong> @TempData["Message"]</strong> 
+    <table id="regTable" class="table table-bordered table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Number</th>
+                <th>Email</th>
+                <th>CountryName</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<div class="modal fade" id="regModal" tabindex="-1" aria-labelledby="regModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create / Edit Registration</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="Id" />
+                <div class="mb-3">
+                    <label for="Name" class="form-label">Name</label>
+                    <input type="text" id="Name" class="form-control" placeholder="Enter Name" />
+                </div>
+                <div class="mb-3">
+                    <label for="Number" class="form-label">Number</label>
+                    <input type="number" id="Number" class="form-control" placeholder="Enter Number" />
+                </div>
+                <div class="mb-3">
+                    <label for="Email" class="form-label">Email</label>
+                    <input type="email" id="Email" class="form-control" placeholder="Enter Email" />
+                </div>
+                <!-- New: Country Dropdown -->
+                <div class="mb-3">
+                    <label for="CountryID" class="form-label">Country</label>
+                    <select id="CountryID" class="form-select">
+                        <option value="">-- Select Country --</option>
+                        <!-- Options will be loaded dynamically by JavaScript -->
+
+                        <option value="1">India</option>
+                        <option value="2">USA</option>
+                        <option value="3">UK</option>
+                        <option value="4">India</option>
+                        <option value="5">Nepal</option>
+
+
+                    </select>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button id="saveBtn" class="btn btn-success">Save</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
     </div>
+</div>
 
-<p>
-    @Html.ActionLink("Create New", "Create")
-</p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.empid)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.empname)
+@section scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.salary)
+    <!-- Bootstrap Bundle JS (required for modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-..." crossorigin="anonymous"></script>
 
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.emp_job)
-
-
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.depid) 
-
-
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.emp_date)
-
-
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.email)
-
-
-        </th>
-    </tr>
-    @foreach (var item in  Model)
-    {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.empid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.empname)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.salary)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.emp_job)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.depid)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.emp_date)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.email)
-            </td>
-
-            <td>
-                @if (!string.IsNullOrEmpty(item.Images))
-                {
-                    <img src="@Url.Content(item.Images)" width="80" />
-                }
-                else
-                {
-                    <span>No Image</span>
-                }
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id = item.empid }) |
-                @Html.ActionLink("Details", "Details", new { id = item.empid }) |
-                @Html.ActionLink("Delete", "Delete", new { id = item.empid }, new { onclick = "return confirm('Are you sure you want to delete this record?');" })
-
-            </td>
-        </tr>
-    }
-
-</table>
+    <!-- Bootstrap Icons CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+}
