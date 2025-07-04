@@ -1,64 +1,51 @@
-﻿using second_Mvc_Web_Apps.Models;
+﻿using Microsoft.Ajax.Utilities;
+using ministore.Models;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
-using System.Net.NetworkInformation;
-using System.Runtime.Remoting.Messaging;
 using System.Web;
 using System.Web.Mvc;
-using System.Web.Razor.Tokenizer;
 using System.Web.UI.WebControls;
-using System.Net.Mail;
-using System.Net;
 
-namespace second_Mvc_Web_Apps.Controllers
+namespace ministore.Controllers
 {
     public class DemoController : Controller
     {
         Logic lo = new Logic();
-
+        public const string CartSessionKey = "Cartitems"; // Unique key for the cart in session
+        // Helper Method: Gets the current cart from session, or creates a new one if it doesn't exist.
+        public List<Cartitem> GetCart()
+        {
+            var cart = Session[CartSessionKey] as List<Cartitem>;
+            if (cart == null)
+            {
+                cart = new List<Cartitem>();
+                /*                Session[CartSessionKey] = cart;*/ // Store the new empty cart in session
+            }
+            return cart;
+        }
+        // GET: Demo
         public ActionResult Index()
         {
-            List<ListofEmployees> employees = lo.GetAll();
-            var emailService = new Logic();
-            string error;
-           /* if (emailService.SendEmail(out error))
-            {
-                TempData["Message"] = "✅ Email sent successfully!";
-            }
-            else
-            {
-                TempData["Message"] = "❌ Failed to send email: " + error;
-            }*/
-
-            return View(employees);
-            
-
-
+            List<Listofproducts> products = lo.GetAll();
+            return View(products);
         }
+
+        // GET: Demo/Details/5
+        public ActionResult Details(int id)
+        {
+            var products = lo.GetAll().Find(s => s.productid == id);
+            return View(products);
+        }
+
+        // GET: Demo/Create
         public ActionResult Create() => View();
 
+        // POST: Demo/Create
         [HttpPost]
-        public ActionResult Create(ListofEmployees insertemployee, HttpPostedFileBase imageFile )
+        public ActionResult Create(Listofproducts products, HttpPostedFileBase imageFile)
         {
-            try
-            {
-                var emailexists = lo.Duplicate_email_checking(insertemployee.email);
-                if (emailexists)
-                {
-                    ModelState.AddModelError("email","this email is already exists");
-                }
-                var emailService = new Logic();
-                string error;
-                if (emailService.SendEmail(out error))
-                {
-                    TempData["Message"] = "✅ Email sent successfully!";
-                }
-                else
-                {
-                    TempData["Message"] = "❌ Failed to send email: " + error;
-                }
+        
                 if (ModelState.IsValid)
                 {
                     if (imageFile != null && imageFile.ContentLength > 0)
@@ -67,36 +54,25 @@ namespace second_Mvc_Web_Apps.Controllers
                         string relativePath = "/Content/assets/";
 
                         string savedPath = lo.SaveImage(imageFile, serverPath, relativePath);
-                        insertemployee.Images = savedPath;
+                        products.images = savedPath;
                     }
-                    lo.Insert(insertemployee);
+                    lo.Insert(products);
                     return RedirectToAction("Index");
                 }
+            return View(products);
+        }
 
-            else
-                {
-                    return View(insertemployee);
-                }
-
-            }
-            catch (SqlException ex)
+            // GET: Demo/Edit/5
+            public ActionResult Edit(int id)
             {
-                // Check if it’s your custom SQL error
-                Console.WriteLine(ex.Message);
-                return View(insertemployee);
+                List<Listofproducts> products = lo.GetAll();
+                var product = lo.GetAll().Find(s => s.productid == id);
+                return View(product);
             }
-        }
 
-        [HttpGet]
-        public ActionResult Edit(int id)
-        {
-            List<ListofEmployees> employees = lo.GetAll();
-            ListofEmployees employee = employees.FirstOrDefault(s => s.empid == id);
-            return View(employee);
-        }
-
+        // POST: Demo/Edit/5
         [HttpPost]
-        public ActionResult Edit(ListofEmployees employees , HttpPostedFileBase imageFile)
+        public ActionResult Edit(int id, Listofproducts products,HttpPostedFileBase imageFile)
         {
             if (ModelState.IsValid)
             {
@@ -107,41 +83,117 @@ namespace second_Mvc_Web_Apps.Controllers
 
                     // ✅ Call your helper method
                     string savedPath = lo.SaveImage(imageFile, serverPath, relativePath);
-                    employees.Images = savedPath;
+                    products.images = savedPath;
                 }
-                lo.Update(employees);
+                lo.Update(products);
                 return RedirectToAction("Index");
             }
-            return View(employees);
+            return View(products);
         }
 
-        public ActionResult Delete(int id)
-        {
-             lo.Delete(id);
-             return RedirectToAction("Index");
+                // GET: Demo/Delete/5
+                public ActionResult Delete(int id)
+                {
+                    var product = lo.GetAll().Find(s => s.productid == id);
+                    return View(product);
+                }
+
+                // POST: Demo/Delete/5
+                [HttpPost]
+                public ActionResult Delete(int id, Listofproducts products)
+                {
+                    products.productid = id;
+                    lo.Delete(products);
+                    return RedirectToAction("Index");
+                }
+
+                public ActionResult MyCart()
+                {
+                    var cart = GetCart();
+                    return View(cart); // Pass the list of CartItems to the view
+                }
+
+                public ActionResult AddToCart(int id, int quantity = 1)
+                {
+                    // 1. Get the product details from the database
+                    var product = lo.GetByproductid(id); // Using the corrected GetByProductId
+                    if (product == null)
+                    {
+                        return HttpNotFound(); // Product not found
+                    }
+
+                    // 2. Get the current cart from the session
+                    var cart = GetCart();
+
+                    // 3. Check if the item already exists in the cart
+                    var existingCartItem = cart.Find(item => item.productid == id);
+
+                    if (existingCartItem != null)
+                    {
+                        // If it exists, just update the quantity
+                        existingCartItem.quantity += quantity;
+                    }
+                    else
+                    {
+                        // If it's a new item, add it to the cart
+                        cart.Add(new Cartitem()
+                        {
+                            productid = product.productid,
+                            price = product.price
+                        });
+                    }
+                    // 4. Update the session with the modified cart
+                    Session[CartSessionKey] = cart;
+                    return RedirectToAction("MyCart");
+                }
+
+
+                // POST: Demo/RemoveFromCart/5
+                [HttpPost]
+                public ActionResult RemoveFromCart(int id)
+                {
+                    var cart = GetCart();
+                    var itemToRemove = cart.Find(item => item.productid == id);
+
+                    if (itemToRemove != null)
+                    {
+                        cart.Remove(itemToRemove);
+                        Session[CartSessionKey] = cart; // Update session
+                    }
+                    return RedirectToAction("MyCart");
+                }
+
+                // POST: Demo/UpdateCartQuantity/5
+                [HttpPost]
+                public ActionResult UpdateCartQuantity(int id, int quantity)
+                {
+                    if (quantity < 0) quantity = 0; // Prevent negative quantities
+
+                    var cart = GetCart();
+                    var itemToUpdate = cart.Find(item => item.productid == id);
+
+                    if (itemToUpdate != null)
+                    {
+                        if (quantity == 0)
+                        {
+                            cart.Remove(itemToUpdate); // Remove if quantity is 0
+                        }
+                        else
+                        {
+                            itemToUpdate.quantity = quantity;
+                        }
+                        Session[CartSessionKey] = cart; // Update session
+                    }
+                    return RedirectToAction("MyCart");
+                }
+
+                // Optional: Action to clear the entire cart
+                public ActionResult ClearCart()
+                {
+                    Session.Remove(CartSessionKey);
+                    return RedirectToAction("MyCart");
+                }
+            }
         }
-         
-       
-
-
-        [HttpGet]
-
-        public ActionResult Details(int id)
-        {
-            var employees = lo.GetAll().Find(emp => emp.empid == id);
-            return View(employees);
-        }
-
-       
-
-
-
-    }
-         
     
-}
 
-
-
-  
-            

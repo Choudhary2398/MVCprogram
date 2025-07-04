@@ -1,105 +1,124 @@
-﻿using second_Mvc_Web_Apps.Models;
+﻿using ministore.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.Data;
 using System.Linq;
 using System.Web;
+using Antlr.Runtime;
+using System.IO;
 
-namespace second_Mvc_Web_Apps
+namespace ministore
 {
     public class Logic
     {
-        string conString = ConfigurationManager.ConnectionStrings["dbArif"].ConnectionString;
+        string cs = ConfigurationManager.ConnectionStrings["dbpro"].ConnectionString;
 
-        public List<ListofEmployees> GetAll()
+            
+        public List<Listofproducts> GetAll()
         {
-            List<ListofEmployees> list = new List<ListofEmployees>();
-
-            using (SqlConnection con = new SqlConnection(conString))
+            List<Listofproducts> product = new List<Listofproducts>();
+            using (SqlConnection con = new SqlConnection(cs))
             {
-                SqlCommand cmd = new SqlCommand("SELECT * FROM employees", con);
                 con.Open();
-                SqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                SqlCommand cmd = new SqlCommand("spgetproducts", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                SqlDataReader dr = cmd.ExecuteReader();
+                while (dr.Read())
                 {
-                    list.Add(new ListofEmployees
+                    product.Add(new Listofproducts()
                     {
-                        empid = Convert.ToInt32(rdr["empid"]),
-                        empname = rdr["empname"].ToString()
+                        productid = Convert.ToInt32(dr["productid"]),
+                        productname = Convert.ToString(dr["productname"]),
+                        price = Convert.ToInt32(dr["price"]),
+                        category = Convert.ToString(dr["category"]),
+                        images = Convert.ToString(dr["images"])
                     });
                 }
             }
-
-            return list;
+            return product;
         }
-
-        public ListofEmployees GetByempid(int empid)
+       
+        public Listofproducts GetByproductid(int productid)
         {
-            ListofEmployees list = new ListofEmployees();
-            ListofEmployees employees = null;
-            using (SqlConnection con = new SqlConnection(conString))
+            Listofproducts list = new Listofproducts();
+            Listofproducts products = null;
+            using (SqlConnection con = new SqlConnection(cs))
             {
-                SqlCommand cmd = new SqlCommand("select * from employees where empid = @empid", con);
-                cmd.Parameters.AddWithValue("@empid", list.empid);
                 con.Open();
-                SqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr.Read())
+                SqlCommand cmd = new SqlCommand("spinsertproducts", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@productid", list.productid);
+                cmd.Parameters.AddWithValue("@productname", list.productname);
+                cmd.Parameters.AddWithValue("@price", list.price);
+                cmd.Parameters.AddWithValue("@category", list.category);
+                SqlDataReader dr = cmd.ExecuteReader();
+                if (dr.Read())
                 {
-                    employees = new ListofEmployees
+                    products = new Listofproducts
                     {
-                        empid = Convert.ToInt32(rdr["id"]),
-                        empname = rdr["name"].ToString()
+                        productid = Convert.ToInt32(dr["productid"]),
+                        productname = Convert.ToString(dr["productname"]),
+                        price = Convert.ToInt32(dr["price"]),
+                        category = Convert.ToString(dr["category"]),
+                        images = Convert.ToString(dr["images"])
                     };
                 }
+
             }
-            return employees;
+            return products;
         }
-
-        public void Insert(ListofEmployees employees)
+       
+        public void Insert(Listofproducts products)
         {
-            using (SqlConnection con = new SqlConnection(conString))
+            using (SqlConnection con = new SqlConnection(cs))
             {
-                SqlCommand cmd = new SqlCommand("insert into employees (empname) values ( @empname)", con);
 
-                cmd.Parameters.AddWithValue("@empname", employees.empname);
+                SqlCommand cmd = new SqlCommand("spinsertproducts", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@productname", products.productname);
+                cmd.Parameters.AddWithValue("@price", products.price);
+                cmd.Parameters.AddWithValue("@category", products.category);
                 con.Open();
                 cmd.ExecuteNonQuery();
             }
         }
-
-        public void Update(ListofEmployees employees)
+        public void Update(Listofproducts products)
         {
-            try
+            using (SqlConnection con = new SqlConnection(cs))
             {
-                using (SqlConnection con = new SqlConnection(conString))
-                {
-                    con.Open();
-                    SqlCommand cmd = new SqlCommand("UPDATE employees SET empname = @empname where empid = @empid", con);
-                    cmd.Parameters.AddWithValue("@empid", employees.empid);
-                    cmd.Parameters.AddWithValue("@empname", employees.empname);
-                    cmd.ExecuteNonQuery();
-                    con.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-
-        }
-
-        public void Delete(int id)
-        {
-            using (SqlConnection con = new SqlConnection(conString))
-            {
+                SqlCommand cmd = new SqlCommand("spupdateproducts", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@productid", products.productid);
+                cmd.Parameters.AddWithValue("@productname", products.productname);
+                cmd.Parameters.AddWithValue("@price", products.price);
+                cmd.Parameters.AddWithValue("@category", products.category);
                 con.Open();
-                SqlCommand cmd = new SqlCommand("delete from employees where empid = @empid", con);
-                cmd.Parameters.AddWithValue("@empid", id);
                 cmd.ExecuteNonQuery();
-                con.Close();
             }
+        }
+        public void Delete(Listofproducts products)
+        {
+            using (SqlConnection con = new SqlConnection(cs))
+            {
+                SqlCommand cmd = new SqlCommand("spdeleteproducts", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@productid", products.productid);
+                con.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+        public string SaveImage(HttpPostedFileBase file, string serverPath, string relativePath)
+        {
+            if (file == null || file.ContentLength == 0)
+                return null;
+
+            string fileName = Path.GetFileName(file.FileName); // just original file name
+            string fullPath = Path.Combine(serverPath, fileName);
+
+            file.SaveAs(fullPath);
+            return Path.Combine(relativePath, fileName).Replace("\\", "/");
         }
     }
 }
